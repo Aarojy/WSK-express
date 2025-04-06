@@ -15,18 +15,19 @@ const getUserById = (req, res) => {
   res.status(200).json(user);
 };
 
-const postUser = async (req, res) => {
+const postUser = async (req, res, next) => {
   try {
-    const {name, username, email, role, password} = req;
+    const {name, username, email, role, password} = req.body;
 
     // Validate required fields
     if (!name || !username || !email || !role || !password) {
-      return res.status(400).json({error: 'Missing required fields'});
+      const error = new Error('Missing required fields');
+      error.status = 400;
+      throw error;
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('Hashed Password:', hashedPassword);
 
     // Save the user to the database
     const result = await addUser({
@@ -37,14 +38,15 @@ const postUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    if (result.user_id) {
-      return result;
-    } else {
-      return res.status(400).json({error: 'Failed to add user'});
+    if (!result.user_id) {
+      const error = new Error('Failed to add user');
+      error.status = 400;
+      throw error;
     }
+
+    res.status(201).json(result);
   } catch (error) {
-    console.error('Error adding user:', error);
-    return res.status(500).json({error: 'Internal server error'});
+    next(error); // Pass the error to the error handler middleware
   }
 };
 

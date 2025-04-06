@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 import sharp from 'sharp';
+import {validationResult} from 'express-validator';
 
 const createThumbnail = async (req, res, next) => {
   if (!req.file) {
@@ -39,6 +40,17 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-export {authenticateToken};
+const validateRequest = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = new Error('Validation failed');
+    error.status = 400;
+    error.details = errors.array();
+    return next(error);
+  }
+  next();
+};
+
+export {authenticateToken, validateRequest};
 
 export default createThumbnail;
