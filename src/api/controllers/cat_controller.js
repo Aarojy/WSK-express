@@ -16,7 +16,7 @@ const getCatById = (req, res) => {
 
 const postCat = (req, res) => {
   const result = addCat(req.body);
-  if (result.cat_id) {
+  if (result) {
     res.status(201).json(result);
   } else {
     res.status(400).json({error: 'Invalid cat data'});
