@@ -1,48 +1,53 @@
-const users = [
-  {
-    user_id: 3617,
-    name: 'Grace Hopper',
-    username: 'gracehopper',
-    email: 'grace@metropolia.fi',
-    role: 'admin',
-    password: 'grace123',
-  },
-  {
-    user_id: 3618,
-    name: 'Henry Ford',
-    username: 'henryford',
-    email: 'henry@metropolia.fi',
-    role: 'user',
-    password: 'carbuilder',
-  },
-];
+import promisePool from '../../utils/database.js';
 
-const listUsers = () => {
-  return users;
+const listUsers = async () => {
+  const [rows] = await promisePool.query('SELECT * FROM wsk_users');
+  return rows;
 };
 
-const findUserById = (id) => {
-  const user = users.find((user) => user.user_id === id);
-  if (!user) {
-    return null;
-  }
-  return user;
+const findUserById = async (id) => {
+  const [rows] = await promisePool.query(
+    'SELECT * FROM wsk_users WHERE user_id = ?',
+    [id]
+  );
+  return rows.length > 0 ? rows[0] : null;
 };
 
-const addUser = (user) => {
+const addUser = async (user) => {
   const {name, username, email, role, password} = user;
-  const newId = users.length > 0 ? users[users.length - 1].user_id + 1 : 1;
-
-  users.push({
-    user_id: newId,
+  const sql = `INSERT INTO wsk_users (name, username, email, role, password) VALUES (?, ?, ?, ?, ?)`;
+  const [result] = await promisePool.execute(sql, [
     name,
     username,
     email,
     role,
     password,
-  });
-
-  return {user_id: newId};
+  ]);
+  return {user_id: result.insertId};
 };
 
-export {listUsers, findUserById, addUser};
+const deleteUser = async (userId) => {
+  const connection = await promisePool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Delete all cats owned by the user
+    await connection.query('DELETE FROM wsk_cats WHERE owner = ?', [userId]);
+
+    // Delete the user
+    const [result] = await connection.query(
+      'DELETE FROM wsk_users WHERE user_id = ?',
+      [userId]
+    );
+
+    await connection.commit();
+    return result.affectedRows;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+export {listUsers, findUserById, addUser, deleteUser};

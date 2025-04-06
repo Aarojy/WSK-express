@@ -1,0 +1,29 @@
+### Get all cats (with owner's name)
+GET http://localhost:3000/api/v1/cats
+Content-Type: application/json
+
+###
+
+### Get a specific cat by ID (with owner's name)
+GET http://localhost:3000/api/v1/cats/41
+Content-Type: application/json
+
+###
+
+### Get cats by user ID
+GET http://localhost:3000/api/v1/cats/user/1
+Content-Type: application/json
+
+###
+
+### Add a new cat
+POST http://localhost:3000/api/v1/cats
+Content-Type: application/json
+
+{
+  "cat_name": "Whiskers",
+  "weight": 4.5,
+  "owner": 1,
+  "filename": "whiskers.jpg",
+  "birthdate": "2022-01-01"
+}

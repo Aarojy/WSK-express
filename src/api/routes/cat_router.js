@@ -1,24 +1,58 @@
+/* eslint-disable no-unused-vars */
 import express from 'express';
-import multer from 'multer';
-
 import {
-  getCats,
-  getCatById,
-  postCat,
-  putCat,
-  deleteCat,
-} from '../controllers/cat_controller.js';
-import createThumbnail from '../../middlewares.js';
+  listCats,
+  findCatById,
+  findCatsByUserId,
+  addCat,
+} from '../models/cat_model.js';
 
 const catRouter = express.Router();
 
-const upload = multer({dest: 'uploads/'});
+catRouter.get('/', async (req, res) => {
+  try {
+    const cats = await listCats();
+    res.status(200).json(cats);
+  } catch (error) {
+    console.error('Error fetching cats:', error);
+    res.status(500).json({error: 'Failed to fetch cats'});
+  }
+});
 
-catRouter.route('/:id').get(getCatById).put(putCat).delete(deleteCat);
+catRouter.get('/:id', async (req, res) => {
+  try {
+    const cat = await findCatById(req.params.id);
+    if (!cat) {
+      return res.status(404).json({error: 'Cat not found'});
+    }
+    res.status(200).json(cat);
+  } catch (error) {
+    console.error('Error fetching cat by ID:', error);
+    res.status(500).json({error: 'Failed to fetch cat'});
+  }
+});
 
-catRouter
-  .route('/')
-  .get(getCats)
-  .post(upload.single('file'), createThumbnail, postCat);
+catRouter.get('/user/:userId', async (req, res) => {
+  try {
+    const cats = await findCatsByUserId(req.params.userId);
+    if (cats.length === 0) {
+      return res.status(404).json({error: 'No cats found for this user'});
+    }
+    res.status(200).json(cats);
+  } catch (error) {
+    console.error('Error fetching cats by user ID:', error);
+    res.status(500).json({error: 'Failed to fetch cats by user ID'});
+  }
+});
+
+catRouter.post('/', async (req, res) => {
+  try {
+    const newCat = await addCat(req.body);
+    res.status(201).json(newCat);
+  } catch (error) {
+    console.error('Error adding cat:', error);
+    res.status(500).json({error: 'Failed to add cat'});
+  }
+});
 
 export default catRouter;
