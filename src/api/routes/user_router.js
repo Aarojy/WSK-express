@@ -1,17 +1,17 @@
 /* eslint-disable no-unused-vars */
 import express from 'express';
 import {
-  listUsers,
-  findUserById,
-  addUser,
+  getUsers,
+  getUserById,
+  postUser,
   deleteUser,
-} from '../models/user_model.js';
+} from '../controllers/user_controller.js';
 
 const userRouter = express.Router();
 
 userRouter.get('/', async (req, res) => {
   try {
-    const users = await listUsers();
+    const users = await getUsers();
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({error: 'Failed to fetch users'});
@@ -20,7 +20,7 @@ userRouter.get('/', async (req, res) => {
 
 userRouter.get('/:id', async (req, res) => {
   try {
-    const user = await findUserById(req.params.id);
+    const user = await getUserById(req.params.id);
     if (!user) {
       return res.status(404).json({error: 'User not found'});
     }
@@ -32,7 +32,7 @@ userRouter.get('/:id', async (req, res) => {
 
 userRouter.post('/', async (req, res) => {
   try {
-    const newUser = await addUser(req.body);
+    const newUser = await postUser(req.body);
     res.status(201).json(newUser);
   } catch (error) {
     res.status(500).json({error: 'Failed to add user'});
